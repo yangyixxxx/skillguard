@@ -1,0 +1,57 @@
+rules:
+  - id: READ_SSH_PRIVATE_KEY
+    name: read ssh private key
+    pattern: 'cat\s+~/.ssh/id_(rsa|ed25519|ecdsa)'
+    severity: High
+    weight: 70
+    hardTrigger: false
+    context: exec
+  - id: READ_AWS_CREDENTIALS
+    name: read aws credentials
+    pattern: 'cat\s+~/.aws/credentials'
+    severity: High
+    weight: 70
+    hardTrigger: false
+    context: exec
+  - id: READ_ENV_FILE
+    name: read env file
+    pattern: 'cat\s+\.env'
+    severity: Medium
+    weight: 50
+    hardTrigger: false
+    context: exec
+  - id: READ_PASSWD
+    name: read passwd file
+    pattern: 'cat\s+/etc/passwd'
+    severity: Medium
+    weight: 45
+    hardTrigger: false
+    context: exec
+  - id: READ_GIT_CREDENTIALS
+    name: read git credentials
+    pattern: 'cat\s+.*\.git-credentials'
+    severity: High
+    weight: 65
+    hardTrigger: false
+    context: exec
+  - id: READ_CHROME_LOGIN_DATA
+    name: read chrome login data
+    pattern: 'Chrome.*/Login\s*Data'
+    severity: High
+    weight: 70
+    hardTrigger: false
+    context: exec
+  - id: READ_FIREFOX_LOGINS
+    name: read firefox logins
+    pattern: 'Firefox.*/logins\.json'
+    severity: High
+    weight: 70
+    hardTrigger: false
+    context: exec
+  - id: READ_DOCKER_CONFIG
+    name: read docker config
+    pattern: '\.docker/config\.json'
+    severity: Medium
+    weight: 50
+    hardTrigger: false
+    context: exec

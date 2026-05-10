@@ -1,0 +1,21 @@
+packages:
+  - name: serde
+    min_monthly_downloads: 10000000
+  - name: tokio
+    min_monthly_downloads: 10000000
+  - name: reqwest
+    min_monthly_downloads: 5000000
+  - name: clap
+    min_monthly_downloads: 5000000
+  - name: anyhow
+    min_monthly_downloads: 5000000
+  - name: thiserror
+    min_monthly_downloads: 5000000
+  - name: tracing
+    min_monthly_downloads: 5000000
+  - name: axum
+    min_monthly_downloads: 2000000
+  - name: regex
+    min_monthly_downloads: 10000000
+  - name: chrono
+    min_monthly_downloads: 5000000

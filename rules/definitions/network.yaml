@@ -1,0 +1,77 @@
+rules:
+  - id: CURL_POST
+    name: curl POST request
+    pattern: 'curl\s+-X\s+POST'
+    severity: Low
+    weight: 6
+    hardTrigger: false
+    context: exec
+  - id: NETCAT
+    name: netcat connection
+    pattern: 'nc\s+\S+\s+\d+'
+    severity: Low
+    weight: 6
+    hardTrigger: false
+    context: exec
+  - id: PY_URLLIB
+    name: python urllib request
+    pattern: 'urllib\.request\.urlopen\s*\('
+    severity: Low
+    weight: 3
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: HTTP_REQUEST
+    name: python requests call
+    pattern: 'requests\.(get|post)\s*\('
+    severity: Low
+    weight: 3
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: WEBSOCKET_CONNECT
+    name: websocket connection
+    pattern: 'ws://'
+    severity: Low
+    weight: 3
+    hardTrigger: false
+    context: exec
+  - id: FTP_PROTOCOL
+    name: ftp protocol usage
+    pattern: 'ftp://\S+'
+    severity: Low
+    weight: 6
+    hardTrigger: false
+    context: exec
+  - id: DNS_RESOLVER
+    name: dns resolver usage
+    pattern: 'dns\.resolver'
+    severity: Medium
+    weight: 40
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: DNS_EXFIL_PATTERN
+    name: dns exfiltration pattern
+    pattern: 'f["\'']\.\.\{.*\}.*\.(resolve|query)'
+    severity: High
+    weight: 65
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: ICMP_RAW_SOCKET
+    name: icmp raw socket
+    pattern: 'socket\(.*AF_INET.*SOCK_RAW.*IPPROTO_ICMP'
+    severity: High
+    weight: 60
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: SCAPY_IMPORT
+    name: scapy import
+    pattern: 'from\s+scapy\s+import'
+    severity: Medium
+    weight: 40
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec

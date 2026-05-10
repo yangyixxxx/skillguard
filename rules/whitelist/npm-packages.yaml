@@ -1,0 +1,37 @@
+packages:
+  - name: express
+    min_monthly_downloads: 20000000
+  - name: react
+    min_monthly_downloads: 20000000
+  - name: lodash
+    min_monthly_downloads: 40000000
+  - name: axios
+    min_monthly_downloads: 30000000
+  - name: typescript
+    min_monthly_downloads: 20000000
+  - name: next
+    min_monthly_downloads: 5000000
+  - name: fastify
+    min_monthly_downloads: 3000000
+  - name: zod
+    min_monthly_downloads: 10000000
+  - name: prisma
+    min_monthly_downloads: 3000000
+  - name: commander
+    min_monthly_downloads: 20000000
+  - name: chalk
+    min_monthly_downloads: 30000000
+  - name: dotenv
+    min_monthly_downloads: 20000000
+  - name: uuid
+    min_monthly_downloads: 20000000
+  - name: yaml
+    min_monthly_downloads: 10000000
+  - name: nanoid
+    min_monthly_downloads: 10000000
+  - name: "@anthropic-ai/sdk"
+    min_monthly_downloads: 1000000
+  - name: openai
+    min_monthly_downloads: 3000000
+  - name: langchain
+    min_monthly_downloads: 1000000

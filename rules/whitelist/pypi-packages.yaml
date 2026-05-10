@@ -1,0 +1,62 @@
+# Python packages considered safe (high download count, active maintenance)
+packages:
+  - name: requests
+    min_monthly_downloads: 30000000
+  - name: numpy
+    min_monthly_downloads: 50000000
+  - name: pandas
+    min_monthly_downloads: 30000000
+  - name: pillow
+    min_monthly_downloads: 80000000
+  - name: flask
+    min_monthly_downloads: 10000000
+  - name: django
+    min_monthly_downloads: 5000000
+  - name: fastapi
+    min_monthly_downloads: 5000000
+  - name: pydantic
+    min_monthly_downloads: 20000000
+  - name: httpx
+    min_monthly_downloads: 10000000
+  - name: beautifulsoup4
+    min_monthly_downloads: 10000000
+  - name: boto3
+    min_monthly_downloads: 30000000
+  - name: pytest
+    min_monthly_downloads: 20000000
+  - name: click
+    min_monthly_downloads: 20000000
+  - name: jinja2
+    min_monthly_downloads: 20000000
+  - name: pyyaml
+    min_monthly_downloads: 20000000
+  - name: cryptography
+    min_monthly_downloads: 20000000
+  - name: aiohttp
+    min_monthly_downloads: 10000000
+  - name: sqlalchemy
+    min_monthly_downloads: 10000000
+  - name: celery
+    min_monthly_downloads: 5000000
+  - name: redis
+    min_monthly_downloads: 10000000
+  - name: matplotlib
+    min_monthly_downloads: 10000000
+  - name: scipy
+    min_monthly_downloads: 10000000
+  - name: scikit-learn
+    min_monthly_downloads: 10000000
+  - name: torch
+    min_monthly_downloads: 5000000
+  - name: tensorflow
+    min_monthly_downloads: 5000000
+  - name: transformers
+    min_monthly_downloads: 5000000
+  - name: openai
+    min_monthly_downloads: 5000000
+  - name: anthropic
+    min_monthly_downloads: 1000000
+  - name: langchain
+    min_monthly_downloads: 3000000
+  - name: rich
+    min_monthly_downloads: 10000000

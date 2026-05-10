@@ -1,0 +1,27 @@
+{
+  "name": "@aspect/skill-guard-cli",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "skill-guard": "./dist/bin/skill-guard.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@aspect/skill-guard": "workspace:*",
+    "@aspect/skill-guard-adapter-newmax": "workspace:*",
+    "nanoid": "^5.1.6"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.0"
+  }
+}

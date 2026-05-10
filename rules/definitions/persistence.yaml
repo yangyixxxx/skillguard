@@ -1,0 +1,22 @@
+rules:
+  - id: CRONTAB
+    name: crontab modification
+    pattern: '(crontab\s+-[^l]|/etc/cron\.d/)'
+    severity: High
+    weight: 65
+    hardTrigger: false
+    context: exec
+  - id: REG_RUN_KEY_ADD
+    name: registry run key addition
+    pattern: 'reg\s+add\s+.*\\Run'
+    severity: High
+    weight: 70
+    hardTrigger: false
+    context: exec
+  - id: SCHTASKS_CREATE
+    name: scheduled task creation
+    pattern: 'schtasks\s+/create\s+/sc\s+onlogon'
+    severity: High
+    weight: 70
+    hardTrigger: false
+    context: exec

@@ -1,0 +1,351 @@
+rules:
+  # ────────────────────────────────────────────────────────────
+  # Destructive commands — single mistake nukes the host.
+  # ────────────────────────────────────────────────────────────
+  - id: RM_RF_ROOT
+    name: rm -rf root deletion
+    pattern: 'rm\s+-rf\s+/($|\s)'
+    severity: Critical
+    weight: 100
+    hardTrigger: true
+    context: exec
+    description: |
+      Recursively deletes everything starting at the filesystem root, including
+      /etc, /home, /var, /usr. There is no legitimate reason for a Skill to
+      execute this — it permanently destroys the host.
+    remediation: |
+      Remove the line. If you genuinely need to clean a temp directory, name
+      it explicitly (e.g. `rm -rf "$TMPDIR/skill-cache"`) and never use
+      `/` or `~` as the deletion root.
+    references:
+      - https://cwe.mitre.org/data/definitions/250.html
+
+  - id: CURL_PIPE_SH
+    name: curl piped to shell
+    pattern: 'curl[^\n|]*\|\s*(bash|sh)'
+    severity: Critical
+    weight: 100
+    hardTrigger: true
+    context: exec
+    description: |
+      Downloads a script from the network and immediately executes it. The
+      Skill becomes a remote-code-execution gadget for the upstream URL —
+      anyone who can MITM, take over the domain, or modify the server can
+      run arbitrary code on every host that runs this Skill.
+    remediation: |
+      Pin a specific version (e.g. download a tarball with a known SHA-256,
+      verify the digest, then execute). Or invoke a system package manager
+      that already verifies signatures (apt / brew / npm with lockfile).
+    references:
+      - https://cwe.mitre.org/data/definitions/494.html
+      - https://www.idontplaydarts.com/2016/04/detecting-curl-pipe-bash-server-side/
+
+  - id: WGET_PIPE_SH
+    name: wget piped to shell
+    pattern: 'wget[^\n|]*\|\s*(bash|sh)'
+    severity: Critical
+    weight: 100
+    hardTrigger: true
+    context: exec
+    description: |
+      Same risk as curl-piped-to-shell: arbitrary remote code execution with
+      no integrity check on the downloaded payload.
+    remediation: |
+      Download to a file, verify with `sha256sum` against a pinned digest,
+      then execute only on success.
+    references:
+      - https://cwe.mitre.org/data/definitions/494.html
+
+  - id: READ_SHADOW
+    name: read /etc/shadow
+    pattern: 'cat\s+/etc/shadow'
+    severity: Critical
+    weight: 100
+    hardTrigger: true
+    context: exec
+    description: |
+      /etc/shadow contains hashed passwords for every local account. Reading
+      it is a privilege-escalation building block — there is no legitimate
+      reason for a Skill to access it.
+    remediation: |
+      Remove the read. If you need to test password policy, use PAM or call
+      `getent shadow` only with explicit administrative consent.
+    references:
+      - https://cwe.mitre.org/data/definitions/522.html
+
+  - id: RM_RF_HOME
+    name: rm -rf home directory
+    pattern: 'rm\s+-rf\s+(~|\$HOME)($|\s)'
+    severity: Critical
+    weight: 100
+    hardTrigger: true
+    context: exec
+    description: |
+      Recursively deletes the user's entire home directory — config, SSH
+      keys, browser data, source code, everything. Indistinguishable from
+      ransomware behavior.
+    remediation: |
+      Delete a specific subdirectory the Skill owns
+      (e.g. `rm -rf "$HOME/.cache/your-skill"`).
+
+  - id: RM_RF_HOME_GLOB
+    name: rm -rf home glob
+    pattern: 'rm\s+-rf\s+~/\*'
+    severity: Critical
+    weight: 100
+    hardTrigger: true
+    context: exec
+    description: |
+      Same risk as `rm -rf $HOME` — wipes every dotless file under the user
+      home.
+    remediation: |
+      Scope the deletion to a Skill-owned subdirectory.
+
+  - id: RM_RF_USERS_HOME
+    name: rm -rf specific user dir
+    pattern: 'rm\s+-rf\s+/Users/\w+'
+    severity: Critical
+    weight: 100
+    hardTrigger: true
+    context: exec
+    description: |
+      macOS variant of home-directory destruction. Targets a hard-coded user
+      account and wipes its entire profile.
+    remediation: |
+      Use `$HOME` and scope the path to a Skill-owned subdirectory.
+
+  - id: DD_WIPE
+    name: dd disk wipe
+    pattern: 'dd\s+.*of=/dev/sd[a-z]'
+    severity: Critical
+    weight: 100
+    hardTrigger: true
+    context: exec
+    description: |
+      `dd of=/dev/sdX` overwrites a raw block device byte-by-byte. There is
+      no recovery — every partition, filesystem, and bootloader on the disk
+      becomes garbage.
+    remediation: |
+      Remove the call. Skills should never write to raw block devices.
+
+  - id: MKFS_FORMAT
+    name: format disk
+    pattern: 'mkfs\s+/dev/'
+    severity: Critical
+    weight: 100
+    hardTrigger: true
+    context: exec
+    description: |
+      `mkfs` reformats a block device, destroying any existing filesystem.
+      Skills have no business formatting disks.
+    remediation: |
+      Remove the call.
+
+  - id: DISKUTIL_ERASE
+    name: macOS disk erase
+    pattern: 'diskutil\s+erase(Disk|Volume)'
+    severity: Critical
+    weight: 100
+    hardTrigger: true
+    context: exec
+    description: |
+      macOS disk erase wipes a volume or whole disk. Same severity as
+      `mkfs` on Linux.
+    remediation: |
+      Remove the call.
+
+  - id: NEWFS_FORMAT
+    name: macOS disk format
+    pattern: 'newfs\s+/dev/rdisk\d'
+    severity: Critical
+    weight: 100
+    hardTrigger: true
+    context: exec
+    description: |
+      macOS legacy disk-formatting command. Destroys the target volume.
+    remediation: |
+      Remove the call.
+
+  # ────────────────────────────────────────────────────────────
+  # Remote-exec / staged-payload patterns
+  # ────────────────────────────────────────────────────────────
+  - id: BASE64_EXEC
+    name: base64 decode to shell
+    pattern: 'base64\s+-d\s*\|\s*(bash|sh)'
+    severity: Critical
+    weight: 100
+    hardTrigger: true
+    context: exec
+    description: |
+      Hides a shell command behind base64 encoding and pipes the decoded
+      output to a shell. Classic obfuscation step in malware loaders to
+      defeat substring scanners and analyst eyeballs.
+    remediation: |
+      Remove the construct. If a binary blob legitimately must be unpacked,
+      keep decoding and execution as separate steps with integrity checks
+      between them.
+    references:
+      - https://attack.mitre.org/techniques/T1027/
+
+  - id: REVERSE_SHELL
+    name: reverse shell
+    pattern: '(/dev/tcp/|nc\s+-e\s+/bin/(ba)?sh|socat\s+.*exec.*bash)'
+    severity: Critical
+    weight: 100
+    hardTrigger: true
+    context: exec
+    description: |
+      Opens an outbound TCP connection and pipes a shell over it, giving the
+      remote endpoint full interactive control of the host. Defining
+      characteristic of post-exploitation backdoors.
+    remediation: |
+      Remove the call. Legitimate remote-management uses SSH with a
+      known-host key, not a raw shell over `/dev/tcp` or `nc -e`.
+    references:
+      - https://attack.mitre.org/techniques/T1059/004/
+
+  - id: POWERSHELL_ENCODED_COMMAND
+    name: powershell encoded command
+    pattern: 'powershell\s+.*-[Ee]ncoded[Cc]ommand'
+    severity: Critical
+    weight: 100
+    hardTrigger: true
+    context: exec
+    description: |
+      `-EncodedCommand` runs base64-encoded PowerShell, the most common
+      obfuscation pattern in Windows malware (Emotet, TrickBot, lateral
+      movement loaders).
+    remediation: |
+      Pass scripts as plain text or as a signed `.ps1` file.
+    references:
+      - https://attack.mitre.org/techniques/T1059/001/
+
+  - id: POWERSHELL_IEX_DOWNLOAD
+    name: powershell download execute
+    pattern: 'IEX\s*\(\s*(New-Object\s+Net\.WebClient\s*\)\s*\.DownloadString|Invoke-WebRequest)'
+    severity: Critical
+    weight: 100
+    hardTrigger: true
+    context: exec
+    description: |
+      Downloads a script over HTTP and pipes it to `Invoke-Expression` —
+      Windows-equivalent of `curl | sh`. Indicator of remote-code-execution
+      loaders.
+    remediation: |
+      Download the script to disk, verify its signature with
+      `Get-AuthenticodeSignature`, then execute only on success.
+
+  - id: POWERSHELL_PIPE_IEX
+    name: powershell pipe iex
+    pattern: '(IWR|Invoke-WebRequest)\s+.*\|\s*IEX'
+    severity: Critical
+    weight: 100
+    hardTrigger: true
+    context: exec
+    description: |
+      Variant of the IEX download pattern using `Invoke-WebRequest`. Same
+      risk profile.
+    remediation: |
+      Download, verify signature, then execute.
+
+  - id: MSHTA_EXEC
+    name: mshta javascript
+    pattern: 'mshta\s+javascript:'
+    severity: Critical
+    weight: 100
+    hardTrigger: true
+    context: exec
+    description: |
+      `mshta` runs HTML Application content; with a `javascript:` payload it
+      executes inline JavaScript outside the browser sandbox. A staple
+      Living-off-the-Land Binary used to evade EDR.
+    remediation: |
+      Remove. If you need scripted automation on Windows, use a signed
+      PowerShell script or a normal `.exe`.
+    references:
+      - https://lolbas-project.github.io/lolbas/Binaries/Mshta/
+
+  - id: REGSVR32_SCJ
+    name: regsvr32 remote load
+    pattern: 'regsvr32\s+/[si]:https?://'
+    severity: Critical
+    weight: 100
+    hardTrigger: true
+    context: exec
+    description: |
+      Squiblydoo — uses `regsvr32` to fetch and execute a remote scriptlet,
+      bypassing AppLocker and many AV signatures.
+    remediation: |
+      Never load remote `.sct` scriptlets. Distribute signed binaries
+      instead.
+    references:
+      - https://attack.mitre.org/techniques/T1218/010/
+
+  - id: RUNDLL32_SCRIPT
+    name: rundll32 javascript
+    pattern: 'rundll32\s+javascript:'
+    severity: Critical
+    weight: 100
+    hardTrigger: true
+    context: exec
+    description: |
+      Living-off-the-Land technique using `rundll32` to execute inline
+      JavaScript. Used to evade application allow-listing.
+    remediation: |
+      Remove. Use a normal scripting host.
+    references:
+      - https://lolbas-project.github.io/lolbas/Binaries/Rundll32/
+
+  # ────────────────────────────────────────────────────────────
+  # Privilege escalation & persistence
+  # ────────────────────────────────────────────────────────────
+  - id: SUDOERS
+    name: modify sudo permissions
+    pattern: '(/etc/sudoers|visudo|NOPASSWD)'
+    severity: Critical
+    weight: 100
+    hardTrigger: true
+    context: exec
+    description: |
+      Editing /etc/sudoers, calling visudo, or setting NOPASSWD grants
+      passwordless root to a user. A Skill modifying sudo policy is a
+      privilege-escalation backdoor.
+    remediation: |
+      Remove. If a Skill genuinely needs root, ask the operator to grant it
+      explicitly — never have the Skill grant it to itself.
+    references:
+      - https://attack.mitre.org/techniques/T1548/003/
+
+  - id: SSH_KEYS
+    name: plant SSH keys
+    pattern: '>\s*~/.ssh/authorized_keys'
+    severity: Critical
+    weight: 100
+    hardTrigger: true
+    context: exec
+    description: |
+      Appending or overwriting ~/.ssh/authorized_keys grants the embedded
+      key persistent SSH access. Standard backdoor-persistence technique.
+    remediation: |
+      Remove. If a Skill needs to bootstrap SSH access, route it through
+      the operator's existing key-management workflow.
+    references:
+      - https://attack.mitre.org/techniques/T1098/004/
+
+  # ────────────────────────────────────────────────────────────
+  # Highly sensitive file targets
+  # ────────────────────────────────────────────────────────────
+  - id: READ_WINDOWS_SAM
+    name: read Windows SAM
+    pattern: '\\Windows\\System32\\config\\SAM'
+    severity: Critical
+    weight: 100
+    hardTrigger: true
+    context: exec
+    description: |
+      The Windows SAM hive holds local account password hashes. Reading it
+      is a credential-theft prerequisite (e.g. for offline NTLM cracking).
+    remediation: |
+      Remove. There is no legitimate Skill use case for accessing SAM.
+    references:
+      - https://attack.mitre.org/techniques/T1003/002/

@@ -1,0 +1,23 @@
+export * from './adapter/auto-detect.js';
+export * from './adapter/interface.js';
+export * from './analyzers/dependency.js';
+export * from './analyzers/env-extractor.js';
+export * from './analyzers/permission.js';
+export * from './analyzers/structure.js';
+export * from './config/defaults.js';
+export * from './engine/rule-engine.js';
+export * from './engine/rule-loader.js';
+export * from './engine/rule-types.js';
+export * from './errors.js';
+export * from './report/builder.js';
+export * from './report/types.js';
+export * from './scanner.js';
+
+export { buildMetadataCard } from './report/metadata-card.js';
+export type { MetadataCard, MetadataCardInput, DependencyStatus, NetworkPermission, FilePermission } from './report/metadata-card.js';
+export { toSarif } from './report/sarif.js';
+export type { SarifReport } from './report/sarif.js';
+export { normalizeCode } from './analyzers/normalizer.js';
+export type { NormalizeResult } from './analyzers/normalizer.js';
+export { SkillGuard } from './sdk.js';
+export type { SkillGuardOptions, ScanResult, FileScanResult } from './sdk.js';

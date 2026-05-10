@@ -1,0 +1,81 @@
+rules:
+  - id: PY_EVAL
+    name: python eval usage
+    pattern: 'eval\s*\('
+    severity: Low
+    weight: 6
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: PY_EXEC
+    name: python exec usage
+    pattern: 'exec\s*\('
+    severity: Low
+    weight: 6
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: OS_SYSTEM
+    name: os.system call
+    pattern: 'os\.system\s*\('
+    severity: Low
+    weight: 6
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: SUBPROCESS_SHELL
+    name: subprocess shell true
+    pattern: 'subprocess\.(run|call|Popen)\s*\([^\)]*shell\s*=\s*True'
+    severity: Medium
+    weight: 20
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: SUBPROCESS_CALL
+    name: subprocess call
+    pattern: 'subprocess\.(run|call|Popen)\s*\('
+    severity: Low
+    weight: 0
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: NODE_CHILD_EXEC
+    name: child_process exec
+    pattern: 'child_process\.exec\s*\('
+    severity: Low
+    weight: 6
+    hardTrigger: false
+    extensions: [".js", ".ts"]
+    context: exec
+  - id: NODE_VM_RUN
+    name: vm runInNewContext
+    pattern: 'vm\.runInNewContext\s*\('
+    severity: Low
+    weight: 6
+    hardTrigger: false
+    extensions: [".js", ".ts"]
+    context: exec
+  - id: GO_EXEC_COMMAND
+    name: go exec command
+    pattern: 'exec\.Command\s*\('
+    severity: Low
+    weight: 6
+    hardTrigger: false
+    extensions: [".go"]
+    context: exec
+  - id: JAVA_RUNTIME_EXEC
+    name: java runtime exec
+    pattern: 'Runtime\.getRuntime\(\)\.exec\s*\('
+    severity: Low
+    weight: 6
+    hardTrigger: false
+    extensions: [".java"]
+    context: exec
+  - id: PHP_EXEC
+    name: php exec functions
+    pattern: '(shell_exec|passthru|system)\s*\('
+    severity: Low
+    weight: 6
+    hardTrigger: false
+    extensions: [".php"]
+    context: exec

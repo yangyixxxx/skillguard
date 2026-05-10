@@ -1,0 +1,47 @@
+{
+  "name": "@yangyixxxx/skill-guard",
+  "version": "0.1.0",
+  "description": "Local-first security scanner for AI Skills (Anthropic Skill bundles, Newmax, OpenClaw, MCP, GPTs Actions). Catches malicious code, supply-chain attacks, and prompt injection — pure static analysis, sub-2s, zero LLM cost.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "skill-guard": "./dist/skill-guard.mjs"
+  },
+  "files": [
+    "dist",
+    "rules",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node ./scripts/bundle.mjs",
+    "skill-guard": "node ./dist/skill-guard.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "ai",
+    "skill",
+    "security",
+    "scanner",
+    "static-analysis",
+    "anthropic",
+    "claude",
+    "skills",
+    "supply-chain",
+    "prompt-injection",
+    "sarif"
+  ],
+  "homepage": "https://skillguard.vip",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yangyixxxx/skillguard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yangyixxxx/skillguard/issues"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.4"
+  }
+}

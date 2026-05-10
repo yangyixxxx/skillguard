@@ -1,0 +1,15 @@
+rules:
+  - id: SUDO
+    name: sudo usage
+    pattern: 'sudo\s+'
+    severity: Low
+    weight: 3
+    hardTrigger: false
+    context: exec
+  - id: CHMOD_777
+    name: chmod 777
+    pattern: 'chmod\s+(0?777|a\+rwx)'
+    severity: High
+    weight: 55
+    hardTrigger: false
+    context: exec

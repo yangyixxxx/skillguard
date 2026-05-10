@@ -1,0 +1,489 @@
+rules:
+  # --- Command Injection ---
+  - id: PY_EVAL
+    name: python eval usage
+    pattern: 'eval\s*\('
+    severity: Low
+    weight: 6
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+    description: |
+      `eval()` executes a string as Python code. Whenever any part of that
+      string can come from user input, an external API, or a file, it
+      becomes arbitrary-code-execution.
+    remediation: |
+      For arithmetic, use `ast.literal_eval`. For dynamic dispatch, use a
+      whitelist dict keyed by the input. Never feed `eval()` data you did
+      not author.
+    references:
+      - https://cwe.mitre.org/data/definitions/95.html
+  - id: PY_EXEC
+    name: python exec usage
+    pattern: 'exec\s*\('
+    severity: Low
+    weight: 6
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+    description: |
+      `exec()` runs an arbitrary Python statement string. Same RCE risk as
+      `eval()` but with broader effect (can define functions, mutate
+      globals, etc.).
+    remediation: |
+      Replace with explicit imports / dispatch tables. Never `exec()` data
+      that crosses a trust boundary.
+    references:
+      - https://cwe.mitre.org/data/definitions/95.html
+  - id: OS_SYSTEM
+    name: os.system call
+    pattern: 'os\.system\s*\('
+    severity: Low
+    weight: 6
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+    description: |
+      `os.system()` runs a shell. Any concatenated input becomes a command
+      injection vector via shell metacharacters (; | & $() backticks).
+    remediation: |
+      Use `subprocess.run([cmd, arg1, arg2], ...)` with a list (no shell)
+      and never embed user input in the command string.
+    references:
+      - https://cwe.mitre.org/data/definitions/78.html
+  - id: SUBPROCESS_SHELL
+    name: subprocess shell true
+    pattern: 'subprocess\.(run|call|Popen)\s*\([^\)]*shell\s*=\s*True'
+    severity: Medium
+    weight: 20
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+    description: |
+      `subprocess.*(..., shell=True)` passes the command through a shell.
+      If any variable is concatenated into that string and reaches the
+      shell unescaped, an attacker can break out via `;`, `|`, `&&`,
+      `$()`, or backticks and run arbitrary commands.
+    remediation: |
+      Pass argv as a list and drop `shell=True`:
+        `subprocess.run(['cmd', arg1, arg2], ...)`
+      If you genuinely need a pipeline, build it in Python (Popen +
+      stdout=PIPE) instead of letting the shell parse it.
+    references:
+      - https://cwe.mitre.org/data/definitions/78.html
+      - https://docs.python.org/3/library/subprocess.html#security-considerations
+  - id: SUBPROCESS_CALL
+    name: subprocess call
+    pattern: 'subprocess\.(run|call|Popen)\s*\('
+    severity: Low
+    weight: 0
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+    description: |
+      Informational: this Skill spawns child processes. Not inherently
+      dangerous, but combined with user-controlled arguments it becomes a
+      command-injection surface.
+    remediation: |
+      Make sure every argument is either a hardcoded constant or has been
+      validated against a whitelist. Never pass `shell=True`.
+  - id: NODE_CHILD_EXEC
+    name: child_process exec
+    pattern: 'child_process\.exec\s*\('
+    severity: Low
+    weight: 6
+    hardTrigger: false
+    extensions: [".js", ".ts"]
+    context: exec
+    description: |
+      Node's `child_process.exec` runs the command through `/bin/sh -c`,
+      so any interpolated variable can break out via shell metacharacters.
+    remediation: |
+      Use `child_process.execFile(cmd, [arg1, arg2])` or `spawn(cmd, [...])`
+      which do not invoke a shell.
+    references:
+      - https://cwe.mitre.org/data/definitions/78.html
+      - https://nodejs.org/api/child_process.html#child_processexeccommand-options-callback
+  - id: NODE_VM_RUN
+    name: vm runInNewContext
+    pattern: 'vm\.runInNewContext\s*\('
+    severity: Low
+    weight: 6
+    hardTrigger: false
+    extensions: [".js", ".ts"]
+    context: exec
+  - id: GO_EXEC_COMMAND
+    name: go exec command
+    pattern: 'exec\.Command\s*\('
+    severity: Low
+    weight: 6
+    hardTrigger: false
+    extensions: [".go"]
+    context: exec
+  - id: JAVA_RUNTIME_EXEC
+    name: java runtime exec
+    pattern: 'Runtime\.getRuntime\(\)\.exec\s*\('
+    severity: Low
+    weight: 6
+    hardTrigger: false
+    extensions: [".java"]
+    context: exec
+  - id: PHP_EXEC
+    name: php exec functions
+    pattern: '(shell_exec|passthru|system)\s*\('
+    severity: Low
+    weight: 6
+    hardTrigger: false
+    extensions: [".php"]
+    context: exec
+
+  # --- Network ---
+  - id: CURL_POST
+    name: curl POST request
+    pattern: 'curl\s+-X\s+POST'
+    severity: Low
+    weight: 6
+    hardTrigger: false
+    context: exec
+  - id: NETCAT
+    name: netcat connection
+    pattern: 'nc\s+\S+\s+\d+'
+    severity: Low
+    weight: 6
+    hardTrigger: false
+    context: exec
+  - id: PY_URLLIB
+    name: python urllib request
+    pattern: 'urllib\.request\.urlopen\s*\('
+    severity: Low
+    weight: 3
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: HTTP_REQUEST
+    name: python requests call
+    pattern: 'requests\.(get|post)\s*\('
+    severity: Low
+    weight: 3
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: WEBSOCKET_CONNECT
+    name: websocket connection
+    pattern: 'ws://'
+    severity: Low
+    weight: 3
+    hardTrigger: false
+    context: exec
+  - id: FTP_PROTOCOL
+    name: ftp protocol usage
+    pattern: 'ftp://\S+'
+    severity: Low
+    weight: 6
+    hardTrigger: false
+    context: exec
+  - id: DNS_RESOLVER
+    name: dns resolver usage
+    pattern: 'dns\.resolver'
+    severity: Medium
+    weight: 40
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: DNS_EXFIL_PATTERN
+    name: dns exfiltration pattern
+    pattern: 'f["\'']\.\.\{.*\}.*\.(resolve|query)'
+    severity: High
+    weight: 65
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: ICMP_RAW_SOCKET
+    name: icmp raw socket
+    pattern: 'socket\(.*AF_INET.*SOCK_RAW.*IPPROTO_ICMP'
+    severity: High
+    weight: 60
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: SCAPY_IMPORT
+    name: scapy import
+    pattern: 'from\s+scapy\s+import'
+    severity: Medium
+    weight: 40
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+
+  # --- Privilege ---
+  - id: SUDO
+    name: sudo usage
+    pattern: 'sudo\s+'
+    severity: Low
+    weight: 3
+    hardTrigger: false
+    context: exec
+  - id: CHMOD_777
+    name: chmod 777
+    pattern: 'chmod\s+(0?777|a\+rwx)'
+    severity: High
+    weight: 55
+    hardTrigger: false
+    context: exec
+
+  # --- Persistence ---
+  - id: CRONTAB
+    name: crontab modification
+    pattern: '(crontab\s+-[^l]|/etc/cron\.d/)'
+    severity: High
+    weight: 65
+    hardTrigger: false
+    context: exec
+  - id: REG_RUN_KEY_ADD
+    name: registry run key addition
+    pattern: 'reg\s+add\s+.*\\Run'
+    severity: High
+    weight: 70
+    hardTrigger: false
+    context: exec
+  - id: SCHTASKS_CREATE
+    name: scheduled task creation
+    pattern: 'schtasks\s+/create\s+/sc\s+onlogon'
+    severity: High
+    weight: 70
+    hardTrigger: false
+    context: exec
+
+  # --- Secrets ---
+  - id: PRIVATE_KEY
+    name: private key detected
+    pattern: '-----BEGIN\s+(RSA\s+)?PRIVATE\s+KEY-----'
+    severity: High
+    weight: 70
+    hardTrigger: false
+    context: any
+  - id: API_KEY
+    name: hardcoded api key
+    pattern: 'api[_-]?key\s*[:=]\s*[''"]([^''"]{16,})[''"]'
+    severity: High
+    weight: 60
+    hardTrigger: false
+    context: any
+    # Real API keys never contain whitespace and don't reference shell
+    # substitution / env-file lookup syntax. The vast majority of API_KEY
+    # findings in the wild were quoted YAML descriptions ("Required for
+    # Anthropic models") and shell `tr -d '"'`-style commands embedded in
+    # README snippets. Reject those at value-level.
+    excludeValuePattern: '\s|\$\(|\$\{|~/|\.env\b|\bgrep\b|\btr\b|\bcut\b|\bawk\b|\bsed\b|^<|<.*>|your[_-]|xxx{4,}|change[_-]?me|placeholder|example|fake|dummy|test[_-]?key|TODO|FIXME|^\s*$'
+    minValueEntropy: 3.5
+    description: |
+      A real-looking high-entropy API key is hardcoded inside the bundle.
+      Once published, the key is leaked to every downstream user and to
+      anyone scraping the registry. Even if rotated later, the leaked
+      version cannot be unrevealed.
+    remediation: |
+      Read the key from the environment at runtime:
+        `key = os.environ['MY_API_KEY']`
+      Document the required env var in SKILL.md so operators know to set
+      it. Never commit the actual value.
+    references:
+      - https://cwe.mitre.org/data/definitions/798.html
+  - id: PASSWORD
+    name: hardcoded password
+    pattern: 'password\s*[:=]\s*[''"]([^''"]{8,})[''"]'
+    severity: High
+    weight: 55
+    hardTrigger: false
+    context: any
+    excludeValuePattern: '\s|\$\(|\$\{|~/|\.env\b|^<|<.*>|your[_-]|xxx{4,}|change[_-]?me|placeholder|example|fake|dummy|test[_-]?pass|password|123456|TODO|FIXME|^\s*$'
+    minValueEntropy: 2.5
+    description: |
+      A literal-looking password is embedded in code. Anyone who reads the
+      Skill bundle (which is the entire point of a skill registry) gets
+      the credential.
+    remediation: |
+      Source passwords from a secret store (env var, OS keychain, vault).
+      Document the requirement in SKILL.md.
+    references:
+      - https://cwe.mitre.org/data/definitions/798.html
+  - id: AWS_KEY
+    name: aws access key
+    pattern: '(AKIA|ASIA)[A-Z0-9]{16}'
+    severity: Critical
+    weight: 80
+    hardTrigger: false
+    context: any
+  - id: GITHUB_TOKEN
+    name: github token
+    pattern: 'ghp_[a-zA-Z0-9]{36}'
+    severity: Critical
+    weight: 80
+    hardTrigger: false
+    context: any
+  - id: JWT_TOKEN
+    name: jwt token
+    pattern: 'eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+'
+    severity: High
+    weight: 75
+    hardTrigger: false
+    context: any
+  - id: DB_CONNECTION_STRING
+    name: database connection string
+    pattern: '(?:mongodb|mysql|postgres|redis)://([^\s''"<>{}]+)'
+    severity: High
+    weight: 70
+    hardTrigger: false
+    context: any
+    excludeValuePattern: '^\$\{|^<|^\.\.\.|your[_-]|user:pass|user:password|host:port|placeholder|example\.com|localhost(:|/|$)|127\.0\.0\.1|0\.0\.0\.0|\.\.\.'
+    minValueEntropy: 2.8
+    description: |
+      A production-looking database URL with embedded credentials is
+      hardcoded. This leaks both the host and the username/password to
+      anyone who reads the Skill — and the credential typically grants
+      read+write access to whatever data the DB holds.
+    remediation: |
+      Build the URL at runtime from environment variables:
+        `os.environ['DATABASE_URL']`
+      Never commit the host or the password.
+    references:
+      - https://cwe.mitre.org/data/definitions/798.html
+  - id: SLACK_WEBHOOK
+    name: slack webhook url
+    pattern: 'hooks\.slack\.com/services/[A-Z0-9/]+'
+    severity: Medium
+    weight: 50
+    hardTrigger: false
+    context: any
+  - id: GENERIC_SECRET
+    name: generic secret
+    pattern: '(?:secret|token|key)\s*[:=]\s*[''"]([^''"]{16,})[''"]'
+    severity: Medium
+    weight: 45
+    hardTrigger: false
+    context: any
+    excludeValuePattern: '\s|\$\(|\$\{|~/|\.env\b|\bgrep\b|\btr\b|\bcut\b|\bawk\b|\bsed\b|^<|<.*>|your[_-]|xxx{4,}|change[_-]?me|placeholder|example|fake|dummy|test[_-]|TODO|FIXME|^\s*$'
+    minValueEntropy: 3.5
+
+  # --- Sensitive File ---
+  - id: READ_SSH_PRIVATE_KEY
+    name: read ssh private key
+    pattern: 'cat\s+~/.ssh/id_(rsa|ed25519|ecdsa)'
+    severity: High
+    weight: 70
+    hardTrigger: false
+    context: exec
+  - id: READ_AWS_CREDENTIALS
+    name: read aws credentials
+    pattern: 'cat\s+~/.aws/credentials'
+    severity: High
+    weight: 70
+    hardTrigger: false
+    context: exec
+  - id: READ_ENV_FILE
+    name: read env file
+    pattern: 'cat\s+\.env'
+    severity: Medium
+    weight: 50
+    hardTrigger: false
+    context: exec
+  - id: READ_PASSWD
+    name: read passwd file
+    pattern: 'cat\s+/etc/passwd'
+    severity: Medium
+    weight: 45
+    hardTrigger: false
+    context: exec
+  - id: READ_GIT_CREDENTIALS
+    name: read git credentials
+    pattern: 'cat\s+.*\.git-credentials'
+    severity: High
+    weight: 65
+    hardTrigger: false
+    context: exec
+  - id: READ_CHROME_LOGIN_DATA
+    name: read chrome login data
+    pattern: 'Chrome.*/Login\s*Data'
+    severity: High
+    weight: 70
+    hardTrigger: false
+    context: exec
+  - id: READ_FIREFOX_LOGINS
+    name: read firefox logins
+    pattern: 'Firefox.*/logins\.json'
+    severity: High
+    weight: 70
+    hardTrigger: false
+    context: exec
+  - id: READ_DOCKER_CONFIG
+    name: read docker config
+    pattern: '\.docker/config\.json'
+    severity: Medium
+    weight: 50
+    hardTrigger: false
+    context: exec
+
+  # --- Other ---
+  - id: PICKLE_LOAD
+    name: pickle load
+    pattern: 'pickle\.load\s*\('
+    severity: Medium
+    weight: 40
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: YAML_UNSAFE_LOAD
+    name: yaml unsafe load
+    pattern: 'yaml\.(unsafe_)?load\s*\('
+    severity: Medium
+    weight: 40
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: OSASCRIPT_EXEC
+    name: osascript execution
+    pattern: 'osascript\s+-e'
+    severity: Medium
+    weight: 45
+    hardTrigger: false
+    context: exec
+  - id: DYNAMIC_IMPORT
+    name: dynamic import
+    pattern: '(importlib\.import_module|__import__)\s*\('
+    severity: Medium
+    weight: 40
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: COMPILE_EXEC
+    name: compile exec
+    pattern: 'compile\s*\(.*,\s*[''"]exec[''"]'
+    severity: Medium
+    weight: 45
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: CTYPES_LOAD
+    name: ctypes load library
+    pattern: 'ctypes\.(CDLL|cdll\.LoadLibrary)\s*\('
+    severity: Medium
+    weight: 50
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: YAML_TYPE_TAG
+    name: yaml type tag injection
+    pattern: '!!(python|ruby|java)/(object|apply|module)'
+    severity: Critical
+    weight: 80
+    hardTrigger: false
+    context: any
+
+  # --- Mention ---
+  - id: CURL_PIPE_SH_MENTION
+    name: curl pipe mention in docs
+    pattern: 'curl[^\n|]*\|\s*(bash|sh)'
+    severity: Low
+    weight: 0
+    hardTrigger: false
+    extensions: [".md"]
+    context: mention

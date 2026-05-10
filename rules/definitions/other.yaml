@@ -1,0 +1,55 @@
+rules:
+  - id: PICKLE_LOAD
+    name: pickle load
+    pattern: 'pickle\.load\s*\('
+    severity: Medium
+    weight: 40
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: YAML_UNSAFE_LOAD
+    name: yaml unsafe load
+    pattern: 'yaml\.(unsafe_)?load\s*\('
+    severity: Medium
+    weight: 40
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: OSASCRIPT_EXEC
+    name: osascript execution
+    pattern: 'osascript\s+-e'
+    severity: Medium
+    weight: 45
+    hardTrigger: false
+    context: exec
+  - id: DYNAMIC_IMPORT
+    name: dynamic import
+    pattern: '(importlib\.import_module|__import__)\s*\('
+    severity: Medium
+    weight: 40
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: COMPILE_EXEC
+    name: compile exec
+    pattern: 'compile\s*\(.*,\s*[''"]exec[''"]'
+    severity: Medium
+    weight: 45
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: CTYPES_LOAD
+    name: ctypes load library
+    pattern: 'ctypes\.(CDLL|cdll\.LoadLibrary)\s*\('
+    severity: Medium
+    weight: 50
+    hardTrigger: false
+    extensions: [".py"]
+    context: exec
+  - id: YAML_TYPE_TAG
+    name: yaml type tag injection
+    pattern: '!!(python|ruby|java)/(object|apply|module)'
+    severity: Critical
+    weight: 80
+    hardTrigger: false
+    context: any

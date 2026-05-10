@@ -1,0 +1,9 @@
+rules:
+  - id: CURL_PIPE_SH_MENTION
+    name: curl pipe mention in docs
+    pattern: 'curl[^\n|]*\|\s*(bash|sh)'
+    severity: Low
+    weight: 0
+    hardTrigger: false
+    extensions: [".md"]
+    context: mention
